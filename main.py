@@ -1,24 +1,17 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-from PIL import Image
 import pytesseract
+from PIL import Image
+import io
 
 app = FastAPI()
 
 @app.get("/")
-def root():
-    return {"message": "OCR API running"}
+def home():
+    return {"status": "ok", "message": "OCR API is running"}
 
 @app.post("/ocr")
 async def ocr_image(file: UploadFile = File(...)):
-    print("---- Incoming request ----")
-    print("filename:", file.filename)
-    print("content_type:", file.content_type)
-    print("--------------------------")
-
-    if file.filename is None:
-        return {"error": "No file uploaded"}
-
-    img = Image.open(file.file)
+    content = await file.read()
+    img = Image.open(io.BytesIO(content))
     text = pytesseract.image_to_string(img)
     return {"text": text}
