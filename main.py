@@ -11,9 +11,14 @@ def root():
 
 @app.post("/ocr")
 async def ocr_image(file: UploadFile = File(...)):
-    try:
-        img = Image.open(file.file)
-        text = pytesseract.image_to_string(img)
-        return {"text": text}
-    except Exception as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
+    print("---- Incoming request ----")
+    print("filename:", file.filename)
+    print("content_type:", file.content_type)
+    print("--------------------------")
+
+    if file.filename is None:
+        return {"error": "No file uploaded"}
+
+    img = Image.open(file.file)
+    text = pytesseract.image_to_string(img)
+    return {"text": text}
