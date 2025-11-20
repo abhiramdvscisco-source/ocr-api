@@ -1,27 +1,19 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-import numpy as np
-import cv2
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import JSONResponse
+from PIL import Image
 import pytesseract
 
 app = FastAPI()
 
 @app.get("/")
 def root():
-    return {"message": "OCR API is running"}
+    return {"message": "OCR API running"}
 
 @app.post("/ocr")
-async def ocr(file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(400, "Please upload an image")
-
-    data = await file.read()
-    npimg = np.frombuffer(data, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
-    if img is None:
-        raise HTTPException(415, "Could not decode image")
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    text = pytesseract.image_to_string(gray)
-
-    return {"text": text}
+async def ocr_image(file: UploadFile = File(...)):
+    try:
+        img = Image.open(file.file)
+        text = pytesseract.image_to_string(img)
+        return {"text": text}
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
